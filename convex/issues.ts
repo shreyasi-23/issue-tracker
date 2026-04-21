@@ -2,6 +2,7 @@ import { query, mutation, MutationCtx } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { getCurrentUser } from "./users";
 import type { Doc, Id } from "./_generated/dataModel";
+import { assertProjectOwner } from "./projects";
 
 /**
  * Guard for operations that only the issue's creator can perform, and
@@ -68,6 +69,14 @@ export const updateStatus = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    const issue = await ctx.db.get(args.id);
+    if (issue === null) {
+      throw new ConvexError("Issue not found");
+    }
+    // Only the owner of the issue's parent project may move it between
+    // columns. Issue creators do not have this right — once an issue is
+    // filed, triage is the project owner's responsibility.
+    await assertProjectOwner(ctx, issue.projectId);
     await ctx.db.patch(args.id, { status: args.status });
   },
 });
