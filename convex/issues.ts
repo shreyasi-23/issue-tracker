@@ -1,4 +1,4 @@
-import { query, mutation, MutationCtx } from "./_generated/server";
+import { query, mutation, type MutationCtx } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { getCurrentUser } from "./users";
 import type { Doc, Id } from "./_generated/dataModel";
