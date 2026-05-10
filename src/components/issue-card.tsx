@@ -26,8 +26,15 @@ function IssueCard({ issue, isOverlay }: IssueCardProps) {
   const removeIssue = useMutation(api.issues.remove);
   const currentUser = useQuery(api.users.currentUser);
   const [editOpen, setEditOpen] = useState(false);
+  const project = useQuery(api.projects.get, { id: issue.projectId });
 
   const isCreator = currentUser?._id === issue.creatorId;
+  const isProjectOwner =
+    currentUser !== undefined &&
+    currentUser !== null &&
+    project !== undefined &&
+    project !== null &&
+    currentUser._id === project.ownerId;
   const canEditOrDelete = isCreator && issue.status === "todo";
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -56,14 +63,14 @@ function IssueCard({ issue, isOverlay }: IssueCardProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {issue.status !== "todo" && (
+              {isProjectOwner && issue.status !== "todo" && (
                 <DropdownMenuItem
                   onClick={() => updateStatus({ id: issue._id, status: "todo" })}
                 >
                   Move to To Do
                 </DropdownMenuItem>
               )}
-              {issue.status !== "in-progress" && (
+              {isProjectOwner && issue.status !== "in-progress" && (
                 <DropdownMenuItem
                   onClick={() =>
                     updateStatus({ id: issue._id, status: "in-progress" })
@@ -72,16 +79,16 @@ function IssueCard({ issue, isOverlay }: IssueCardProps) {
                   Move to In Progress
                 </DropdownMenuItem>
               )}
-              {issue.status !== "done" && (
+              {isProjectOwner && issue.status !== "done" && (
                 <DropdownMenuItem
                   onClick={() => updateStatus({ id: issue._id, status: "done" })}
                 >
                   Move to Done
                 </DropdownMenuItem>
               )}
+              {isProjectOwner && canEditOrDelete && <DropdownMenuSeparator />}
               {canEditOrDelete && (
                 <>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setEditOpen(true)}>
                     <Pencil className="mr-2 h-4 w-4" />
                     Edit
